@@ -1,4 +1,5 @@
 # Java Simple Tetris 프로젝트
+https://tidchron.github.io/tetris/ [다운로드 링크]
 
 고전 게임인 테트리스를 Java 언어로 구현한 프로젝트입니다.
 
