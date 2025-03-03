@@ -8,7 +8,7 @@ public class Block extends Rectangle {
     public static final int SIZE = 30; //30 x 30 block
     public Color c;
 
-    public Block(Color c) { //생성자에서 색상 정보 받기, 각 Tetromino는 다른 색상을 갖기 때문에
+    public Block(Color c) { //생성자에서 색상 정보 받기, 각 mino는 다른 색상을 갖기 때문에
         this.c = c;
     }
 

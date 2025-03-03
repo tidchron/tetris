@@ -1,5 +1,6 @@
 package mino;
 
+import main.GamePanel;
 import main.KeyHandler;
 import main.PlayManager;
 
@@ -68,26 +69,22 @@ public class Mino {
         rightCollision = false;
         bottomCollision = false;
 
-        //Check static block collision
         checkStaticBlockCollision();
 
-        //Check frame collision
-        //Left wall
+        //프레임 충돌 확인
         for (int i = 0; i < b.length; i++) { //블록 배열을 스캔하고 x값을 확인
             if (b[i].x == PlayManager.left_x) { //x값이 플레이 영역 왼쪽의 x와 같으면
                 leftCollision = true; //왼쪽 충돌 발생
             }
         }
-        //Right wall
-        for (int i = 0; i < b.length; i++) { //블록 배열을 스캔하고 x값을 확인
-            if (b[i].x + Block.SIZE == PlayManager.right_x) { //x값이 플레이 영역 오른쪽의 x와 같으면
-                rightCollision = true; //오른쪽 충돌 발생
+        for (int i = 0; i < b.length; i++) {
+            if (b[i].x + Block.SIZE == PlayManager.right_x) {
+                rightCollision = true;
             }
         }
-        //Bottom floor
-        for (int i = 0; i < b.length; i++) { //블록 배열을 스캔하고 y값을 확인
-            if (b[i].y + Block.SIZE == PlayManager.bottom_y) { //y값이 플레이 영역 바닥의 y와 같으면
-                bottomCollision = true; //바닥 충돌 발생
+        for (int i = 0; i < b.length; i++) {
+            if (b[i].y + Block.SIZE == PlayManager.bottom_y) {
+                bottomCollision = true;
             }
         }
     }
@@ -97,23 +94,19 @@ public class Mino {
         rightCollision = false;
         bottomCollision = false;
 
-        //Check static block collision
         checkStaticBlockCollision();
 
-        //Check frame collision
-        //Left wall
+        //프레임 충돌 확인
         for (int i = 0; i < b.length; i++) {
             if (tempB[i].x < PlayManager.left_x) {
                 leftCollision = true;
             }
         }
-        //Right wall
         for (int i = 0; i < b.length; i++) {
             if (tempB[i].x + Block.SIZE > PlayManager.right_x) {
                 rightCollision = true;
             }
         }
-        //Bottom floor
         for (int i = 0; i < b.length; i++) {
             if (tempB[i].y + Block.SIZE > PlayManager.bottom_y) {
                 bottomCollision = true;
@@ -129,22 +122,18 @@ public class Mino {
             int targetX = PlayManager.staticBlocks.get(i).x;
             int targetY = PlayManager.staticBlocks.get(i).y;
 
-            //TargetX, TargetY를 사용해 Check floor collision
+            //TargetX, TargetY를 사용해 충돌 확인
             for (int j = 0; j < b.length; j++) {
                 //staticBlock이 mino 바로 아래에 있음을 의미하므로 바닥 충돌 발생
                 if (b[j].y + Block.SIZE == targetY && b[j].x == targetX) {
                     bottomCollision = true;
                 }
             }
-
-            //Check left collision
             for (int j = 0; j < b.length; j++) {
                 if (b[j].x - Block.SIZE == targetX && b[j].y == targetY) {
                     leftCollision = true;
                 }
             }
-
-            //Check right collision
             for (int j = 0; j < b.length; j++) {
                 if (b[j].x + Block.SIZE == targetX && b[j].y == targetY) {
                     rightCollision = true;
@@ -159,7 +148,7 @@ public class Mino {
             deactivating();
         }
 
-        //Move the mino
+        //mino 모양 회전
         if (KeyHandler.upPressed) {
             switch (direction) {
                 case 1:
@@ -176,6 +165,7 @@ public class Mino {
                     break;
             }
             KeyHandler.upPressed = false;
+            GamePanel.se.play(3, false);
         }
 
         checkMovementCollision();
@@ -213,6 +203,10 @@ public class Mino {
         }
 
         if (bottomCollision) {
+            //바닥 충돌시 사운드 한번만 재생
+            if (!deactivating) {
+                GamePanel.se.play(4, false);
+            }
             deactivating = true;
         } else {
             autoDropCounter++; //매 프레임마다 카운터 늘리기
@@ -231,13 +225,13 @@ public class Mino {
 
         deactivationCounter++;
 
-        //45 Frame 뒤에 비활성화
+        //45프레임 뒤에 비활성화
         if (deactivationCounter == 45) {
 
             deactivationCounter = 0;
             checkMovementCollision(); // Check collision
 
-            //45 Frame 뒤에도 충돌이 계속 켜져 있으면 이 mino를 비활성화
+            //45프레임 뒤에도 충돌이 계속 켜져 있으면 이 mino를 비활성화
             if (bottomCollision) {
                 active = false;
             }

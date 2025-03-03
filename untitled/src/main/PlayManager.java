@@ -29,12 +29,17 @@ public class PlayManager {
 
     //기타
     public static int dropInterval = 60; //mino 자동 하강 (60프레임마다 1회)
+    boolean gameOver;
 
     //효과
     boolean effectCounterOn;
     int effectCounter;
     ArrayList<Integer> effectY = new ArrayList<>();
 
+    //점수
+    int level = 1;
+    int lines;
+    int score;
 
     //생성자: 플레이 영역 초기화
     public PlayManager() {
@@ -100,6 +105,15 @@ public class PlayManager {
             staticBlocks.add(currentMino.b[2]);
             staticBlocks.add(currentMino.b[3]);
 
+            //게임오버 확인
+            if (currentMino.b[0].x == MINO_START_X && currentMino.b[0].y == MINO_START_Y) {
+                //mino를 비활성화할 때 시작 위치에서 mino가 움직이지 않았는지를 확인
+                //움직이지 않았다면 게임오버
+                gameOver = true;
+                GamePanel.music.stop();
+                GamePanel.se.play(2, false);
+            }
+
             currentMino.deactivating = false; //비활성화 상태 초기화
 
             //nextMino로 교체
@@ -121,6 +135,7 @@ public class PlayManager {
         int x = left_x;
         int y = top_y;
         int blockCount = 0;
+        int lineCount = 0;
 
         //전체 플레이 영역 스캔
         //x가 오른쪽 경계(right_x)를 넘지 않고, y가 하단 경계(bottom_y)를 넘지 않을 때까지 반복(한 줄씩 아래로 이동하며 모든 좌표를 검사)
@@ -151,6 +166,20 @@ public class PlayManager {
                         }
                     }
 
+                    lineCount++;
+                    lines++;
+
+                    //Drop 속도 (1이 가장 빠름)
+                    //10줄 마다 level 상승, Drop 속도 증가 (drop 간격 10 증가)
+                    if (lines % 10 == 0 && dropInterval > 1) {
+                        level++;
+                        if (dropInterval > 10) {
+                            dropInterval -= 10;
+                        } else {
+                            dropInterval -= 1;
+                        }
+                    }
+
                     for (int i = 0; i < staticBlocks.size(); i++) {
                         //block의 Y가 staticBlock의 Y보다 크면 block 크기를 추가하여 1 block 아래로 이동
                         if (staticBlocks.get(i).y < y) {
@@ -163,6 +192,13 @@ public class PlayManager {
                 x = left_x; //X 좌표 리셋 (왼쪽 경계)
                 y += Block.SIZE; //Y 좌표 아래로 이동
             }
+        }
+
+        //Score 추가
+        if (lineCount > 0) {
+            GamePanel.se.play(1, false);
+            int singleLineScore = 10 * level;
+            score += singleLineScore * lineCount;
         }
     }
 
@@ -181,10 +217,22 @@ public class PlayManager {
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         g2.drawString("NEXT", x + 60, y + 60);
 
+        //score 프레임 그리기
+        g2.drawRect(x, top_y, 250, 300);
+        x += 40;
+        y = top_y + 90;
+        g2.drawString("LEVEL: " + level, x, y);
+        y += 70;
+        g2.drawString("LINES: " + lines, x, y);
+        y += 70;
+        g2.drawString("SCORE: " + score, x, y);
+
+        //currentMino 그리기
         if (currentMino != null) {
             currentMino.draw(g2);
         }
 
+        //nextMino 그리기
         nextMino.draw(g2);
 
         //staticMino 그리기
@@ -192,13 +240,47 @@ public class PlayManager {
             staticBlocks.get(i).draw(g2);
         }
 
-        //Pause 상태 표시
+        //효과 그리기
+        if (effectCounterOn) {
+            effectCounter++;
+
+            g2.setColor(Color.YELLOW);
+
+            //2번 깜빡임
+            boolean isVisible = (effectCounter / 5) % 2 == 0; //0 ~ 4: ON, 5 ~ 9: OFF 반복
+
+            if (isVisible) {
+                for (int i = 0; i < effectY.size(); i++) {
+                    g2.fillRect(left_x, effectY.get(i), WIDTH, Block.SIZE);
+                }
+            }
+
+            if (effectCounter == 10) {
+                effectCounterOn = false;
+                effectCounter = 0;
+                effectY.clear();
+            }
+        }
+
+        //Pause 상태 표시, 게임오버 표시
         g2.setColor(Color.YELLOW);
         g2.setFont(new Font("TimesRoman", Font.PLAIN, 50));
-        if (KeyHandler.pausePressed) {
+        if (gameOver) {
+            x = left_x + 25;
+            y = top_y + 320;
+            g2.drawString("GAME OVER", x, y);
+        } else if (KeyHandler.pausePressed) {
             x = left_x + 70;
             y = top_y + 320;
             g2.drawString("PAUSED", x, y);
         }
+
+        //게임 타이틀 그리기
+        x = 35;
+        y = top_y + 320;
+        g2.setColor(Color.WHITE);
+        g2.setFont(new Font("Times New Roman", Font.ITALIC, 60));
+        g2.drawString("Simple Tetris", x + 20, y);
+
     }
 }
