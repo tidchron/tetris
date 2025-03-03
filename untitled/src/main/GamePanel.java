@@ -35,7 +35,7 @@ public class GamePanel extends JPanel implements Runnable{
     public void run() {
 
         //Game Loop
-        double drawInterval = 1000000000 / FPS;
+        double drawInterval = (double) 1000000000 / FPS;
         double delta = 0;
         long lastTime = System.nanoTime();
         long currentTime;
@@ -59,7 +59,9 @@ public class GamePanel extends JPanel implements Runnable{
     }
     public void update() {
 
-        pm.update(); //PlayManager에 업데이트 위임
+        if (!KeyHandler.pausePressed){
+            pm.update(); //PlayManager에 업데이트 위임
+        }
     }
     public void paintComponent(Graphics g) { //내장 메서드
         super.paintComponent(g); //paintComponent 메서드를 JPanel에서 사용할 때마다 super를 입력해야 함
