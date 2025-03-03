@@ -14,6 +14,8 @@ public class Mino {
     public int direction = 1; //mino의 4가지 방향(1, 2, 3, 4)
     boolean leftCollision, rightCollision, bottomCollision;
     public boolean active = true;
+    public boolean deactivating;
+    int deactivationCounter = 0;
 
     public void create(Color c) {
         b[0] = new Block(c);
@@ -66,6 +68,9 @@ public class Mino {
         rightCollision = false;
         bottomCollision = false;
 
+        //Check static block collision
+        checkStaticBlockCollision();
+
         //Check frame collision
         //Left wall
         for (int i = 0; i < b.length; i++) { //블록 배열을 스캔하고 x값을 확인
@@ -92,6 +97,9 @@ public class Mino {
         rightCollision = false;
         bottomCollision = false;
 
+        //Check static block collision
+        checkStaticBlockCollision();
+
         //Check frame collision
         //Left wall
         for (int i = 0; i < b.length; i++) {
@@ -113,7 +121,43 @@ public class Mino {
         }
     }
 
+    private void checkStaticBlockCollision() {
+
+        for (int i = 0; i < PlayManager.staticBlocks.size(); i++) { //staticBlocks 배열 스캔
+
+            //각 블록의 X, Y를 가져옴
+            int targetX = PlayManager.staticBlocks.get(i).x;
+            int targetY = PlayManager.staticBlocks.get(i).y;
+
+            //TargetX, TargetY를 사용해 Check floor collision
+            for (int j = 0; j < b.length; j++) {
+                //staticBlock이 mino 바로 아래에 있음을 의미하므로 바닥 충돌 발생
+                if (b[j].y + Block.SIZE == targetY && b[j].x == targetX) {
+                    bottomCollision = true;
+                }
+            }
+
+            //Check left collision
+            for (int j = 0; j < b.length; j++) {
+                if (b[j].x - Block.SIZE == targetX && b[j].y == targetY) {
+                    leftCollision = true;
+                }
+            }
+
+            //Check right collision
+            for (int j = 0; j < b.length; j++) {
+                if (b[j].x + Block.SIZE == targetX && b[j].y == targetY) {
+                    rightCollision = true;
+                }
+            }
+        }
+    }
+
     public void update() {
+
+        if (deactivating) {
+            deactivating();
+        }
 
         //Move the mino
         if (KeyHandler.upPressed) {
@@ -169,7 +213,7 @@ public class Mino {
         }
 
         if (bottomCollision) {
-            active = false;
+            deactivating = true;
         } else {
             autoDropCounter++; //매 프레임마다 카운터 늘리기
             if (autoDropCounter == PlayManager.dropInterval) {
@@ -179,6 +223,23 @@ public class Mino {
                 b[2].y += Block.SIZE;
                 b[3].y += Block.SIZE;
                 autoDropCounter = 0;
+            }
+        }
+    }
+
+    private void deactivating() {
+
+        deactivationCounter++;
+
+        //45 Frame 뒤에 비활성화
+        if (deactivationCounter == 45) {
+
+            deactivationCounter = 0;
+            checkMovementCollision(); // Check collision
+
+            //45 Frame 뒤에도 충돌이 계속 켜져 있으면 이 mino를 비활성화
+            if (bottomCollision) {
+                active = false;
             }
         }
     }
